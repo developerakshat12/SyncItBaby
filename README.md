@@ -284,7 +284,13 @@ Before submitting a PR/MR, ensure your contribution meets every item on this che
 ```
 
 ### 🔍 4. Review Process
-1. **All review process will be done by me** - 
+1. **All review process will be done by me manually so it will take time to respond to PRs.** 
+
+### Future Scope 
+1. **[Main Feature Addition] Dividing devices into 4 channels Left,Right,Front,Back for 8D Audio.**
+2. **[Slice-of-life changes] UI Improvements making it more cohesive and changing the modelselection screen adding gradients.**
+3. **[Slice-of-life changes]Adding Micro interaction for more responsive and lively ui.**
+
 
 ---
 
