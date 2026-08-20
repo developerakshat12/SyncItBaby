@@ -80,33 +80,33 @@
 ```mermaid
 flowchart TD
     subgraph Leader ["Leader Device (Host)"]
-        A[Audio Source: Mic / File / System Capture] --> B[AudioStreamer]
-        B --> C[PacketSerializer & CRC32]
-        C --> D[SocketServiceImpl]
-        E[NtpEngine - Master Clock] <--> D
+        A["Audio Source: Mic / File / System Capture"] --> B["AudioStreamer"]
+        B --> C["PacketSerializer & CRC32"]
+        C --> D["SocketServiceImpl"]
+        E["NtpEngine - Master Clock"] <--> D
     end
 
     subgraph Transport ["Transport Layer (Wi-Fi Hotspot / Local LAN)"]
-        D -->|Raw Binary Packets (TCP/UDP)| F[SocketService Peer]
+        D -->|"Raw Binary Packets (TCP/UDP)"| F["SocketService Peer"]
     end
 
     subgraph Peer ["Peer Device (Joiner)"]
-        F --> G[Packet Parser & CRC Verification]
-        G -->|NTP Timestamp Packets| H[RFC 5905 Min-RTT Filter]
-        H --> I[2-State Kalman Filter [θ, f]]
-        I --> J[TimeDomainConverter]
+        F --> G["Packet Parser & CRC Verification"]
+        G -->|"NTP Timestamp Packets"| H["RFC 5905 Min-RTT Filter"]
+        H --> I["2-State Kalman Filter (θ, f)"]
+        I --> J["TimeDomainConverter"]
 
-        G -->|Audio Stream Packets| K[PendingNackTracker / JitterBuffer]
-        J --> L[PlaybackScheduler]
-        L --> M[DriftController (Discrete PI)]
+        G -->|"Audio Stream Packets"| K["PendingNackTracker / JitterBuffer"]
+        J --> L["PlaybackScheduler"]
+        L --> M["DriftController (Discrete PI)"]
         M --> K
 
-        K -->|Raw PCM Samples| N[NativeAudioBridge (JNI)]
+        K -->|"Raw PCM Samples"| N["NativeAudioBridge (JNI)"]
         subgraph NativeAudioEngine ["Native Audio Engine (C++)"]
-            N --> O[Lock-Free SPSC RingBuffer]
-            O --> P[Oboe Audio Stream / OpenSL ES / AAudio]
+            N --> O["Lock-Free SPSC RingBuffer"]
+            O --> P["Oboe Audio Stream / OpenSL ES / AAudio"]
         end
-        P --> Q[Hardware DAC / Speakers]
+        P --> Q["Hardware DAC / Speakers"]
     end
 ```
 
@@ -284,11 +284,7 @@ Before submitting a PR/MR, ensure your contribution meets every item on this che
 ```
 
 ### 🔍 4. Review Process
-1. **Automated CI**: Every PR triggers automated unit testing, linting, and build verification.
-2. **Review Criteria**:
-   - **Timing Correctness**: Clock sync calculations must preserve 64-bit microsecond precision and account for integer overflow/wrap-around.
-   - **Thread Safety**: Network coroutines and C++ audio renderers must communicate strictly via thread-safe queues or atomic state indicators.
-3. **Approval**: At least one maintainer approval is required before merging. Merges are done via **Squash and Merge** or **Rebase**.
+1. **All review process will be done by me** - 
 
 ---
 
