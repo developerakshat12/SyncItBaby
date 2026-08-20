@@ -41,7 +41,15 @@ class PlaybackForegroundService : Service() {
             .build()
 
         // Start foreground to elevate process priority
-        startForeground(NOTIFICATION_ID, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
 
         // If the service is killed, don't automatically restart it, since it's
         // tied to the lifecycle of the active connection which might be lost.

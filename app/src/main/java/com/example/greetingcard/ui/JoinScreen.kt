@@ -13,7 +13,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Settings
@@ -68,6 +70,15 @@ fun JoinScreen(
         else -> "Disconnected"
     }
 
+    BackHandler {
+        if (showSettingsScreen) {
+            showSettingsScreen = false
+        } else {
+            viewModel.disconnect()
+            onDisconnect()
+        }
+    }
+
     if (showSettingsScreen) {
         SettingsScreen(
             isDeveloperMode = isDeveloperMode,
@@ -98,15 +109,37 @@ fun JoinScreen(
                     .padding(top = 18.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Section
-                Text(
-                    text = dynamicHeaderText,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    textAlign = TextAlign.Center,
-                    fontSize = 24.sp
-                )
+                // Header Section with Back Navigation
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            viewModel.disconnect()
+                            onDisconnect()
+                        },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back to Mode Select",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Text(
+                        text = dynamicHeaderText,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        textAlign = TextAlign.Center,
+                        fontSize = 22.sp,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
                 if (isDeveloperMode) {
                     Spacer(Modifier.height(6.dp))
