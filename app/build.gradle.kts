@@ -55,6 +55,10 @@ android {
     }
 }
 
+base {
+    archivesName.set("SyncItBaby")
+}
+
 dependencies {
     implementation(libs.oboe)
     implementation(platform(libs.androidx.compose.bom))

@@ -172,68 +172,6 @@ fun JoinScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // Audio Streaming Section Header
-                Text(
-                    text = "Audio Streaming",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                )
-
-                // 3 Aux Streaming Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {  },
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PinkPrimary,
-                            contentColor = PinkOnPrimary
-                        ),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Text("Local File", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-
-                    Button(
-                        onClick = {  },
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PinkPrimary,
-                            contentColor = PinkOnPrimary
-                        ),
-                        modifier = Modifier.weight(1.2f),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Text("Capture Live", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-
-                    Button(
-                        onClick = { viewModel.startCalibration(10) },
-                        enabled = isConnected,
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PinkPrimary,
-                            contentColor = PinkOnPrimary,
-                            disabledContainerColor = ButtonDisabledBg,
-                            disabledContentColor = ButtonDisabledText
-                        ),
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(vertical = 12.dp)
-                    ) {
-                        Text("Calibrate", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-                }
-
-                Spacer(Modifier.height(12.dp))
-
                 // Main Connection Action Button (Connect / Disconnect)
                 if (!isConnected) {
                     Button(
