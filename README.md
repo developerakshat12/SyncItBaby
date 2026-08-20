@@ -79,35 +79,48 @@
 
 ```mermaid
 flowchart TD
-    subgraph Leader ["Leader Device (Host)"]
+    subgraph Leader["Leader Device (Host)"]
         A["Audio Source: Mic / File / System Capture"] --> B["AudioStreamer"]
-        B --> C["PacketSerializer & CRC32"]
+        B --> C["PacketSerializer &amp; CRC32"]
         C --> D["SocketServiceImpl"]
-        E["NtpEngine - Master Clock"] <--> D
+        E["NtpEngine - Master Clock"] --- D
     end
 
-    subgraph Transport ["Transport Layer (Wi-Fi Hotspot / Local LAN)"]
-        D -->|"Raw Binary Packets (TCP/UDP)"| F["SocketService Peer"]
+    subgraph Transport["Transport Layer (Wi-Fi Hotspot / Local LAN)"]
+        F["SocketService Peer"]
     end
 
-    subgraph Peer ["Peer Device (Joiner)"]
-        F --> G["Packet Parser & CRC Verification"]
-        G -->|"NTP Timestamp Packets"| H["RFC 5905 Min-RTT Filter"]
-        H --> I["2-State Kalman Filter (θ, f)"]
-        I --> J["TimeDomainConverter"]
+    subgraph Peer["Peer Device (Joiner)"]
+        G["Packet Parser &amp; CRC Verification"]
+        H["RFC 5905 Min-RTT Filter"]
+        I["2-State Kalman Filter (theta, f)"]
+        J["TimeDomainConverter"]
+        K["PendingNackTracker / JitterBuffer"]
+        L["PlaybackScheduler"]
+        M["DriftController (Discrete PI)"]
+        N["NativeAudioBridge (JNI)"]
+        Q["Hardware DAC / Speakers"]
 
-        G -->|"Audio Stream Packets"| K["PendingNackTracker / JitterBuffer"]
-        J --> L["PlaybackScheduler"]
-        L --> M["DriftController (Discrete PI)"]
-        M --> K
-
-        K -->|"Raw PCM Samples"| N["NativeAudioBridge (JNI)"]
-        subgraph NativeAudioEngine ["Native Audio Engine (C++)"]
-            N --> O["Lock-Free SPSC RingBuffer"]
-            O --> P["Oboe Audio Stream / OpenSL ES / AAudio"]
+        subgraph NativeAudioEngine["Native Audio Engine (C++)"]
+            O["Lock-Free SPSC RingBuffer"]
+            P["Oboe Audio Stream / OpenSL ES / AAudio"]
         end
-        P --> Q["Hardware DAC / Speakers"]
+
+        G -->|"NTP Timestamp Packets"| H
+        H --> I
+        I --> J
+        G -->|"Audio Stream Packets"| K
+        J --> L
+        L --> M
+        M --> K
+        K -->|"Raw PCM Samples"| N
+        N --> O
+        O --> P
+        P --> Q
     end
+
+    D -->|"Raw Binary Packets (TCP/UDP)"| F
+    F --> G
 ```
 
 ### Module Structure
