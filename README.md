@@ -23,6 +23,12 @@
 
 **SyncItBaby** turns multiple Android devices into a unified, high-precision distributed audio system over a local Wi-Fi hotspot or LAN. One device acts as the **Leader (Host)**, broadcasting audio streams or transferring media files to multiple connected **Peers (Clients)**, which play back the audio through their native speakers with sub-millisecond acoustic synchronization ($< 1\,\text{ms}$ phase alignment).
 
+### Some problems you may see..
+* **When the peers are connected, calibration will turn on automatically** : But the problem is when you go to developer mode it will show huge phase error which may be true during calibration process but in background it calibrates (I just didn't want UI to be slow down my code for syncing) but when you go to Capture Live -> Entire Screen/One app then it will show almost 0 phase error
+
+* **Why not use snapcast or snapdroid?** : Mainly because I didn't want to download termux and host a server and do all this just for audio streaming. 
+I wanted to use bluetooth for this so badly but I can't do it without root access or straight up use another OS, but still if someone found a work around great mention the repo I will gladly add **spatial audio support feature** in that repo too.
+
 ### Why SyncItBaby?
 * **Zero Root / No Custom Hardware**: Operates entirely over standard Android APIs and Wi-Fi networks.
 * **Overcomes Bluetooth A2DP Bottlenecks**: Standard Bluetooth A2DP is restricted to a single sink per device; SyncItBaby streams to an arbitrary number of client phones concurrently.
