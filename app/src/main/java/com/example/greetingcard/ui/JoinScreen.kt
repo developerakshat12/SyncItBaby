@@ -66,7 +66,11 @@ fun JoinScreen(
     // Dynamic header text resolution
     val dynamicHeaderText = when {
         isCalibrating -> "Calibrating"
-        isConnected -> "Connected"
+        localState == DeviceState.BUFFERING || localState == DeviceState.PLAYING || localState == DeviceState.READY -> "Buffering"
+        localState == DeviceState.AUTHENTICATING || localState == DeviceState.CONNECTING -> "Authenticating"
+        localState == DeviceState.CONNECTED -> "Connected"
+        localState == DeviceState.DEGRADED -> "Weak Connection"
+        localState == DeviceState.RECONNECTING -> "Reconnecting"
         else -> "Disconnected"
     }
 
@@ -218,8 +222,7 @@ fun JoinScreen(
                 AcousticSyncTrimCard(
                     manualTrimMs = manualTrimMs,
                     hostDeviceId = hostDeviceId,
-                    onTrimChange = { viewModel.setManualTrimMs(it) },
-                    onStartCalibrationClick = { viewModel.startCalibration(10) }
+                    onTrimChange = { viewModel.setManualTrimMs(it) }
                 )
 
                 // Audio Sync Telemetry (Visible ONLY when Developer Mode is ON)
@@ -309,7 +312,7 @@ private fun LeaderIPCard(
                         decorationBox = { innerTextField ->
                             if (ipText.isEmpty() && !isConnected) {
                                 Text(
-                                    text = "10.17.225.",
+                                    text = "10.17.225.5",
                                     color = TextSecondary.copy(alpha = 0.35f),
                                     fontSize = 28.sp,
                                     fontWeight = FontWeight.Bold,

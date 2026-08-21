@@ -63,8 +63,8 @@ class AudioStreamer(
 
     fun startStreaming(file: File) {
         if (streamingJob?.isActive == true) {
-            Log.w(TAG, "Already streaming, ignoring start request")
-            return
+            Log.w(TAG, "Already streaming, stopping previous stream first")
+            stopStreaming()
         }
 
         streamingJob = scope.launch(Dispatchers.IO) {
@@ -92,8 +92,8 @@ class AudioStreamer(
 
     fun startStreamingFromCapture(pcmSource: PcmSource) {
         if (streamingJob?.isActive == true) {
-            Log.w(TAG, "Already streaming, ignoring start request")
-            return
+            Log.w(TAG, "Already streaming, stopping previous stream first")
+            stopStreaming()
         }
 
         streamingJob = scope.launch(Dispatchers.IO) {
@@ -107,8 +107,8 @@ class AudioStreamer(
 
     fun startCalibration(durationSeconds: Int = 10) {
         if (streamingJob?.isActive == true) {
-            Log.w(TAG, "Already streaming, ignoring calibration request")
-            return
+            Log.w(TAG, "Already streaming, stopping previous calibration first")
+            stopStreaming()
         }
 
         streamingJob = scope.launch(Dispatchers.IO) {
@@ -220,6 +220,7 @@ class AudioStreamer(
             // Dynamic HAL capture lag calibration state (live capture only)
             var captureLagSamples = 0
             var captureLagAccumulator = 0L
+            var liveChunksRead = 0
 
             while (kotlinx.coroutines.currentCoroutineContext().isActive) {
                 // Read PCM Data -> Encoder input
@@ -258,41 +259,44 @@ class AudioStreamer(
                                     if (isLiveCapture && captureLagSamples < HAL_CALIBRATION_FRAMES) {
                                         captureLagAccumulator += halLag
                                         captureLagSamples++
-
-                                        if (captureLagSamples == HAL_CALIBRATION_FRAMES) {
-                                            val lockedHalLagNs = captureLagAccumulator / HAL_CALIBRATION_FRAMES
-                                            val totalCompensationNs = lockedHalLagNs + OPUS_LOOKAHEAD_NS
-                                            Log.d("AnchorIsolation", "lockedHalLagNs=$lockedHalLagNs, OPUS_LOOKAHEAD_NS=$OPUS_LOOKAHEAD_NS, applied=$totalCompensationNs")
-
-                                            // Shift the anchor backward by the total pipeline delay.
-                                            // This makes all subsequent chunk PTS values align with
-                                            // the actual moment the source app played the audio.
-                                            firstFrameLeaderTimeNs -= totalCompensationNs
-
-                                            // Compute a fresh start-at time (must be in the future)
-                                            val startAtLeaderTimeNs = timeDomainConverter.currentLeaderTimeNs + adaptiveMarginNs
-
-                                            Log.d(TAG, "HAL calibration locked: halLag=%.2f ms, opusLookahead=%.2f ms, totalCompensation=%.2f ms, correctedAnchor=$firstFrameLeaderTimeNs, startAt=$startAtLeaderTimeNs"
-                                                .format(lockedHalLagNs / 1_000_000.0, OPUS_LOOKAHEAD_NS / 1_000_000.0, totalCompensationNs / 1_000_000.0))
-
-                                            val syncStartConfig = AudioSyncStartConfig(
-                                                startAtLeaderTimeNs = startAtLeaderTimeNs,
-                                                firstFrameLeaderTimeNs = firstFrameLeaderTimeNs,
-                                                sampleRate = targetSampleRate,
-                                                channels = targetChannels
-                                            )
-                                            currentSyncStartConfig = syncStartConfig
-
-                                            val syncStartPacket = Packet.build(
-                                                packetType = SyncConstants.TYPE_AUDIO_SYNC_START,
-                                                payload = syncStartConfig.toByteArray(),
-                                                streamId = SyncConstants.STREAM_AUDIO,
-                                                sessionUuid = getSessionId()
-                                            )
-                                            sendPacket(syncStartPacket)
-                                            syncStartSent = true
-                                        }
                                     }
+                                }
+                            }
+
+                            if (isLiveCapture && !syncStartSent) {
+                                liveChunksRead++
+                                if (captureLagSamples >= HAL_CALIBRATION_FRAMES || liveChunksRead >= 10) {
+                                    val lockedHalLagNs = if (captureLagSamples > 0) captureLagAccumulator / captureLagSamples else 20_000_000L
+                                    val totalCompensationNs = lockedHalLagNs + OPUS_LOOKAHEAD_NS
+                                    Log.d("AnchorIsolation", "lockedHalLagNs=$lockedHalLagNs, OPUS_LOOKAHEAD_NS=$OPUS_LOOKAHEAD_NS, applied=$totalCompensationNs, samples=$captureLagSamples, chunks=$liveChunksRead")
+
+                                    // Shift the anchor backward by the total pipeline delay.
+                                    // This makes all subsequent chunk PTS values align with
+                                    // the actual moment the source app played the audio.
+                                    firstFrameLeaderTimeNs -= totalCompensationNs
+
+                                    // Compute a fresh start-at time (must be in the future)
+                                    val startAtLeaderTimeNs = timeDomainConverter.currentLeaderTimeNs + adaptiveMarginNs
+
+                                    Log.d(TAG, "HAL calibration locked: halLag=%.2f ms, opusLookahead=%.2f ms, totalCompensation=%.2f ms, correctedAnchor=$firstFrameLeaderTimeNs, startAt=$startAtLeaderTimeNs"
+                                        .format(lockedHalLagNs / 1_000_000.0, OPUS_LOOKAHEAD_NS / 1_000_000.0, totalCompensationNs / 1_000_000.0))
+
+                                    val syncStartConfig = AudioSyncStartConfig(
+                                        startAtLeaderTimeNs = startAtLeaderTimeNs,
+                                        firstFrameLeaderTimeNs = firstFrameLeaderTimeNs,
+                                        sampleRate = targetSampleRate,
+                                        channels = targetChannels
+                                    )
+                                    currentSyncStartConfig = syncStartConfig
+
+                                    val syncStartPacket = Packet.build(
+                                        packetType = SyncConstants.TYPE_AUDIO_SYNC_START,
+                                        payload = syncStartConfig.toByteArray(),
+                                        streamId = SyncConstants.STREAM_AUDIO,
+                                        sessionUuid = getSessionId()
+                                    )
+                                    sendPacket(syncStartPacket)
+                                    syncStartSent = true
                                 }
                             }
 

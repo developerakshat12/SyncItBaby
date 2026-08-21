@@ -19,7 +19,6 @@ fun AcousticSyncTrimCard(
     manualTrimMs: Float,
     hostDeviceId: String?,
     onTrimChange: (Float) -> Unit,
-    onStartCalibrationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -141,25 +140,12 @@ fun AcousticSyncTrimCard(
 
             HorizontalDivider(color = PlumSurfaceVariant)
 
-            // Calibration Helper Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (hostDeviceId != null) "Host ID: ${hostDeviceId.take(8)}…" else "Host: Default",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary
-                )
-
-                TextButton(
-                    onClick = onStartCalibrationClick,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text("🔔 Test Metronome Tone", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = PinkPrimary)
-                }
-            }
+            // Host Info Section
+            Text(
+                text = if (hostDeviceId != null) "Host ID: ${hostDeviceId.take(8)}…" else "Host: Default",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary
+            )
         }
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.greetingcard.PeerInfo
 import com.example.greetingcard.network.DeviceState
+import com.example.greetingcard.ui.components.AcousticSyncTrimCard
 import com.example.greetingcard.ui.components.TelemetryCard
 import com.example.greetingcard.ui.theme.*
 import com.example.greetingcard.viewmodel.ConnectionViewModel
@@ -55,6 +56,8 @@ fun HostScreen(
     val peers by viewModel.peers.collectAsState()
     val isDeveloperMode by viewModel.isDeveloperMode.collectAsState()
     val appearanceMode by viewModel.appearanceMode.collectAsState()
+    val manualTrimMs by viewModel.manualTrimMs.collectAsState()
+    val hostDeviceId by viewModel.currentHostDeviceId.collectAsState()
 
     var showSettingsScreen by rememberSaveable { mutableStateOf(false) }
 
@@ -292,6 +295,21 @@ fun HostScreen(
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
                         Text("Calibrate", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                }
+
+                // Acoustic Sync Trim Card (Visible when Local File is streaming)
+                AnimatedVisibility(
+                    visible = isStreamingFile,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                        AcousticSyncTrimCard(
+                            manualTrimMs = manualTrimMs,
+                            hostDeviceId = hostDeviceId,
+                            onTrimChange = { viewModel.setManualTrimMs(it) }
+                        )
                     }
                 }
 

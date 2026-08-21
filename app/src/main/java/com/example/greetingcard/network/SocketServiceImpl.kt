@@ -222,6 +222,7 @@ class SocketServiceImpl(
             _statusMessage.value = "Audio silence detected (media may be paused or DRM protected)"
         }
 
+        peerConnections.values.forEach { it.isAudioReady = true }
         audioStreamer.startStreamingFromCapture(pcmSource)
         _statusMessage.value = "Capturing device audio..."
     }
@@ -373,6 +374,7 @@ class SocketServiceImpl(
     }
 
     override fun startAudioStream(file: File) {
+        stopAudioStream()
         isCapturingLiveAudio = false
         // Arm all currently connected peers for audio stream reception
         peerConnections.values.forEach { it.isAudioReady = true }
@@ -382,6 +384,7 @@ class SocketServiceImpl(
 
     override fun startAudioCapture(resultCode: Int, data: android.content.Intent) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            stopAudioStream()
             isCapturingLiveAudio = true
             // Arm all currently connected peers for audio stream reception
             peerConnections.values.forEach { it.isAudioReady = true }
@@ -397,6 +400,7 @@ class SocketServiceImpl(
     }
 
     override fun startCalibrationSession(durationSeconds: Int) {
+        stopAudioStream()
         isCapturingLiveAudio = false
         // Arm all currently connected peers for audio stream reception
         peerConnections.values.forEach { it.isAudioReady = true }
@@ -406,7 +410,24 @@ class SocketServiceImpl(
 
     override fun stopAudioStream() {
         audioStreamer.stopStreaming()
+        audioReceiver.stopStream()
         _rendererTelemetry.value = emptyList()
+
+        if (isAudioCaptureBound) {
+            try {
+                context.unbindService(captureServiceConnection)
+            } catch (e: Exception) {
+                Log.w(TAG, "Error unbinding AudioCaptureService", e)
+            }
+            isAudioCaptureBound = false
+        }
+        try {
+            context.stopService(android.content.Intent(context, com.example.greetingcard.audio.AudioCaptureService::class.java))
+        } catch (e: Exception) {
+            Log.w(TAG, "Error stopping AudioCaptureService", e)
+        }
+        audioCaptureService = null
+        isCapturingLiveAudio = false
     }
 
     override fun triggerClockSync() {
@@ -423,19 +444,6 @@ class SocketServiceImpl(
         pendingSyncStateAckJobs.clear()
 
         stopAudioStream()
-        audioReceiver.stopStream()
-
-        if (isAudioCaptureBound) {
-            try {
-                context.unbindService(captureServiceConnection)
-                isAudioCaptureBound = false
-            } catch (e: Exception) {
-                Log.w(TAG, "Error unbinding AudioCaptureService", e)
-            }
-        }
-
-        // Also stop the service fully
-        context.stopService(android.content.Intent(context, com.example.greetingcard.audio.AudioCaptureService::class.java))
 
         acceptJob?.cancel()
         heartbeatJob?.cancel()
