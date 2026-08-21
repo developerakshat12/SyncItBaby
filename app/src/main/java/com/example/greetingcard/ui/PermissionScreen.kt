@@ -32,27 +32,18 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 
 // The permissions we need to request at runtime, grouped by API level.
 private fun requiredPermissions(): List<String> = buildList {
-    // Always needed
-    add(Manifest.permission.ACCESS_FINE_LOCATION)
-
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         // API 33+ — replaces location for Wi-Fi scan
         add(Manifest.permission.NEARBY_WIFI_DEVICES)
-    }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        // API 31+
-        add(Manifest.permission.BLUETOOTH_SCAN)
-        add(Manifest.permission.BLUETOOTH_CONNECT)
-        add(Manifest.permission.BLUETOOTH_ADVERTISE)
+    } else {
+        // API <= 32 — required for Wi-Fi discovery / SSID on older Android versions
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 }
 
 private fun friendlyName(permission: String): String = when (permission) {
     Manifest.permission.ACCESS_FINE_LOCATION -> "Fine Location"
     Manifest.permission.NEARBY_WIFI_DEVICES  -> "Nearby Wi-Fi Devices"
-    Manifest.permission.BLUETOOTH_SCAN       -> "Bluetooth Scan"
-    Manifest.permission.BLUETOOTH_CONNECT    -> "Bluetooth Connect"
-    Manifest.permission.BLUETOOTH_ADVERTISE  -> "Bluetooth Advertise"
     else -> permission.substringAfterLast('.')
 }
 
